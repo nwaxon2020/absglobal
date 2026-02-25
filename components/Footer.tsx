@@ -144,13 +144,25 @@ const Footer = () => {
                 { name: 'Account Access', href: '#', action: handleAuthAction }
               ].map((link) => (
                 <li key={link.name}>
-                  <button 
-                    onClick={link.action ? link.action : undefined}
-                    className="text-gray-400 hover:text-white text-sm transition-colors flex items-center group"
-                  >
-                    <span className="h-[1px] w-0 group-hover:w-4 bg-blue-500 mr-0 group-hover:mr-2 transition-all duration-300"></span>
-                    {link.name === 'Account Access' && user ? 'Sign Out' : link.name}
-                  </button>
+                  {link.action ? (
+                    /* Use button for functions */
+                    <button 
+                      onClick={link.action}
+                      className="text-gray-400 hover:text-white text-sm transition-colors flex items-center group w-full text-left"
+                    >
+                      <span className="h-[1px] w-0 group-hover:w-4 bg-blue-500 mr-0 group-hover:mr-2 transition-all duration-300"></span>
+                      {link.name === 'Account Access' && user ? 'Sign Out' : link.name}
+                    </button>
+                  ) : (
+                    /* Use Link for actual pages */
+                    <Link 
+                      href={link.href}
+                      className="text-gray-400 hover:text-white text-sm transition-colors flex items-center group"
+                    >
+                      <span className="h-[1px] w-0 group-hover:w-4 bg-blue-500 mr-0 group-hover:mr-2 transition-all duration-300"></span>
+                      {link.name}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

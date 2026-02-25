@@ -4,7 +4,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiHome, FiShoppingCart, FiMenu, FiX, FiChevronDown, FiLogOut, FiMail, FiSettings } from 'react-icons/fi';
+import { 
+  FiHome, FiShoppingCart, FiMenu, FiX, FiChevronDown, 
+  FiLogOut, FiMail, FiSettings, FiShoppingBag, FiInfo, FiPhoneCall 
+} from 'react-icons/fi';
 import { useCart } from '@/components/CartContext';
 import { auth, googleProvider } from '@/lib/firebase'; 
 import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
@@ -166,7 +169,6 @@ const Nav = () => {
                 {user ? (
                   <div className="relative" onMouseEnter={() => setActiveDropdown('user')} onMouseLeave={() => setActiveDropdown(null)}>
                     <div className="flex items-center space-x-2 cursor-pointer">
-                      {/* ADMIN USER NAME CHANGE TO CEO GOLD */}
                       <span className={`text-[11px] font-bold uppercase ${isAdmin ? 'text-[#FFD700]' : 'text-white'}`}>
                         {isAdmin ? 'CEO' : user.displayName?.split(' ')[0]}
                       </span>
@@ -178,7 +180,6 @@ const Nav = () => {
                       {activeDropdown === 'user' && (
                         <motion.div initial="hidden" animate="visible" exit="hidden" variants={dropdownVariants} className="absolute top-full right-0 pt-4 z-50">
                           <div className="bg-white rounded-lg shadow-xl w-40 overflow-hidden">
-                            {/* ADMIN LINK IN DESKTOP DROPDOWN */}
                             {isAdmin && (
                               <Link href="/admin" className="w-full flex items-center space-x-2 px-4 py-3 text-blue-600 hover:bg-blue-50 text-xs font-bold transition-colors border-b border-gray-100">
                                 <FiSettings /> <span>Admin Panel</span>
@@ -227,8 +228,11 @@ const Nav = () => {
 
                     {/* MOBILE STORE DROPDOWN */}
                     <div>
-                      <button onClick={() => setMobileStoreOpen(!mobileStoreOpen)} className="w-full flex justify-between items-center text-white font-bold uppercase tracking-widest text-sm py-2">
-                        Store <FiChevronDown className={`transition-transform ${mobileStoreOpen ? 'rotate-180' : ''}`} />
+                      <button onClick={() => setMobileStoreOpen(!mobileStoreOpen)} className={`w-full flex justify-between items-center font-bold uppercase tracking-widest text-sm py-2 ${pathname.includes('/store') ? 'text-yellow-400' : 'text-white'}`}>
+                        <div className="flex items-center space-x-3">
+                          <FiShoppingBag /> <span>Store</span>
+                        </div>
+                        <FiChevronDown className={`transition-transform ${mobileStoreOpen ? 'rotate-180' : ''}`} />
                       </button>
                       <AnimatePresence>
                         {mobileStoreOpen && (
@@ -245,8 +249,11 @@ const Nav = () => {
 
                     {/* MOBILE ABOUT DROPDOWN */}
                     <div>
-                      <button onClick={() => setMobileAboutOpen(!mobileAboutOpen)} className="w-full flex justify-between items-center text-white font-bold uppercase tracking-widest text-sm py-2">
-                        About <FiChevronDown className={`transition-transform ${mobileAboutOpen ? 'rotate-180' : ''}`} />
+                      <button onClick={() => setMobileAboutOpen(!mobileAboutOpen)} className={`w-full flex justify-between items-center font-bold uppercase tracking-widest text-sm py-2 ${pathname.startsWith('/about') ? 'text-yellow-400' : 'text-white'}`}>
+                        <div className="flex items-center space-x-3">
+                          <FiInfo /> <span>About</span>
+                        </div>
+                        <FiChevronDown className={`transition-transform ${mobileAboutOpen ? 'rotate-180' : ''}`} />
                       </button>
                       <AnimatePresence>
                         {mobileAboutOpen && (
@@ -259,7 +266,9 @@ const Nav = () => {
                       </AnimatePresence>
                     </div>
 
-                    <Link href="/contact" className={`text-white font-bold uppercase tracking-widest text-sm py-2 ${isActive('/contact') ? 'text-yellow-400' : ''}`} onClick={() => setIsOpen(false)}>Contact</Link>
+                    <Link href="/contact" className={`font-bold uppercase tracking-widest text-sm py-2 flex items-center space-x-3 ${isActive('/contact') ? 'text-yellow-400' : 'text-white'}`} onClick={() => setIsOpen(false)}>
+                      <FiPhoneCall /> <span>Contact</span>
+                    </Link>
                 </div>
 
                 <div className="p-8 bg-black/20 border-t border-white/5 mt-auto">
@@ -267,11 +276,9 @@ const Nav = () => {
                     <div className="flex flex-col space-y-4">
                       <div className="flex items-center space-x-4">
                         <div className={`w-12 h-12 rounded-full border-2 overflow-hidden relative flex-shrink-0 ${isAdmin ? 'border-[#FFD700]' : 'border-yellow-400'}`}>
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           <Image src={user.photoURL || '/default-avatar.png'} alt="user" fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                         </div>
                         <div className="overflow-hidden">
-                          {/* ADMIN USER NAME CHANGE TO CEO GOLD (Mobile) */}
                           <p className={`font-bold text-sm truncate ${isAdmin ? 'text-[#FFD700]' : 'text-white'}`}>
                             {isAdmin ? 'CEO' : user.displayName}
                           </p>
@@ -281,7 +288,6 @@ const Nav = () => {
                         </div>
                       </div>
 
-                      {/* ADMIN LINK IN MOBILE SIDEBAR */}
                       {isAdmin && (
                         <Link href="/admin" onClick={() => setIsOpen(false)} className="w-full flex items-center justify-center space-x-2 py-4 bg-blue-600 text-white rounded-lg text-xs font-black uppercase tracking-widest">
                           <FiSettings /> <span>Admin Dashboard</span>
