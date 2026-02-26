@@ -112,7 +112,7 @@ const NewsletterBroadcastUi = () => {
   if (!isCEO) return <div className="p-10 text-center font-black text-red-600 tracking-tighter">ACCESS DENIED</div>;
 
   return (
-    <div className="bg-[#F5F5F5] min-h-screen pt-4 pb-20 md:px-6">
+    <div className="bg-[#F5F5F5] min-h-screen pt-10 pb-20 px-3">
       
       {/* DELETE CONFIRMATION OVERLAY */}
       <AnimatePresence>

@@ -156,7 +156,7 @@ const AdminComplaintsUi = () => {
   };
 
   return (
-    <div className="bg-[#F5F5F5] min-h-screen pt-4 pb-20 px-1 sm:px-6">
+    <div className="bg-[#F5F5F5] min-h-screen pt-10 pb-20 px-4 md:p-12">
       <div className="max-w-7xl mx-auto">
         
         {/* Deletion Confirmation Overlay */}

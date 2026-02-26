@@ -86,7 +86,7 @@ export default function AdminLayout({
         </button>
       </header>
       
-      <main className="p-4 md:p-8">
+      <main>
         {children}
       </main>
     </div>

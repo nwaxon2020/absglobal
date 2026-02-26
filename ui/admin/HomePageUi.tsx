@@ -32,7 +32,7 @@ const AdminHomeUi = () => {
       title: "Product Inventory",
       desc: "Manage stock, prices, and phone specs.",
       icon: <FiBox />,
-      link: "/admin/products",
+      link: "/admin/add-product",
       color: "bg-blue-600"
     },
 
@@ -101,7 +101,7 @@ const AdminHomeUi = () => {
   };
 
   return (
-    <div className="bg-[#F5F5F5] min-h-screen pt-4 pb-10 px-3 md:px-6">
+    <div className="bg-[#F5F5F5] min-h-screen pt-12 pb-10 px-5 md:px-6">
       <div className="max-w-7xl mx-auto">
         
         {/* Header Section */}
