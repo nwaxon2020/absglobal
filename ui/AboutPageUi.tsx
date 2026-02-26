@@ -19,7 +19,7 @@ const AboutPageUi = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % HERO_IMAGES.length);
-    }, 20000);
+    }, 5000);
     return () => clearInterval(timer);
   }, []);
 
@@ -31,10 +31,10 @@ const AboutPageUi = () => {
   ];
 
   return (
-    <div className="bg-[#F5F5F5] min-h-screen pt-24 pb-20">
+    <div className="bg-[#F5F5F5] min-h-screen pt-20 pb-20">
       {/* 1. Hero Section with Auto-Slider */}
-      <section className="max-w-7xl mx-auto px-6 mb-20">
-        <div className="relative h-[400px] rounded-2xl overflow-hidden shadow-2xl bg-[#0B2A4A]">
+      <section className="mx-auto mb-20">
+        <div className="relative h-[250px] md:h-[300px] overflow-hidden shadow-2xl bg-[#0B2A4A]">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentImage}
@@ -126,9 +126,9 @@ const AboutPageUi = () => {
       </section>
 
       {/* 4. CEO Section */}
-      <section className="max-w-6xl mx-auto px-6 mb-24">
-        <div className="bg-white rounded-xl p-8 md:p-12 shadow-xl flex flex-col md:flex-row items-center gap-12 border border-gray-100">
-          <div className="relative w-64 h-80 flex-shrink-0 rounded-xl overflow-hidden shadow-2xl grayscale hover:grayscale-0 transition-all duration-500">
+      <section className="max-w-6xl mx-auto px-3 md:px-6 mb-24">
+        <div className="bg-white md:rounded-xl px-4 py-6 md:p-8 md:p-12 shadow-xl flex flex-col md:flex-row items-center gap-12 border border-gray-100">
+          <div className="relative w-full md:w-64 h-80 flex-shrink-0 rounded-xl overflow-hidden shadow-2xl md:grayscale hover:grayscale-0 transition-all duration-500">
             <Image 
               src="/abst_ceo.png" 
               alt="CEO of ABST Global" 
@@ -197,15 +197,22 @@ const AboutPageUi = () => {
         </div>
       </section>
 
+      {/* Certificate & C of O */}
       <div className='py-20 flex flex-col justify-center items-center'>
         <p className='text-gray-400 font-bold underline'>Registered&reg;</p>
-        <Image
-          src="https://www.234deals.com/product/ZufNl8CgLe_Screenshot_20241012-135606.jpg" 
-          alt="Registered Logo"
-          width={350}
-          height={500} 
-        />
+        
+        {/* 1. Add a wrapper div with responsive width classes */}
+        <div className="relative w-[200px] h-[300px] md:w-[350px] md:h-[500px]">
+          <Image
+            src="https://www.234deals.com/product/ZufNl8CgLe_Screenshot_20241012-135606.jpg" 
+            alt="Registered Logo"
+            fill // ✅ Tells image to fill the parent div
+            className="object-contain" // ✅ Keeps the logo from stretching
+            priority // ✅ Good for logos or certificates to load fast
+          />
+        </div>
       </div>
+
     </div>
   );
 };

@@ -30,17 +30,16 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   const product = products.find(p => p.id === parseInt(resolvedParams.id));
   
   const [selectedThumb, setSelectedThumb] = useState(product?.thumbnails[0]);
+  const [selectedStorage, setSelectedStorage] = useState(product?.storage?.[0] || '');
+  
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(product?.likes || 0);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [reviewText, setReviewText] = useState('');
   
-  // Real Firebase User State
   const [user, setUser] = useState<User | null>(null);
-  
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auth Listener (Same as Nav)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
     return () => unsubscribe();
@@ -61,14 +60,12 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
     return <div className="fixed inset-0 bg-black flex items-center justify-center text-white z-[200]">Product not found</div>;
   }
 
-  // Firebase Sign In Handler
   const handleSignIn = async () => {
     try { 
       await signInWithPopup(auth, googleProvider); 
       toast.success("Signed in successfully!");
     } 
     catch (error) { 
-      console.error("Login failed", error);
       toast.error("Authentication failed");
     }
   };
@@ -87,8 +84,8 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   };
 
   const handleAddToCart = () => {
-    addToCart({ ...product, quantity: 1 });
-    toast.success(`${product.name} added to selection!`);
+    addToCart({ ...product, quantity: 1, selectedStorage } as any);
+    toast.success(`${product.name} (${selectedStorage}) added to selection!`);
   };
 
   const handleNextImage = () => {
@@ -105,7 +102,6 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
 
   const handleSubmitReview = () => {
     if (!reviewText.trim()) return;
-    // In a real app, you'd send user.displayName and reviewText to your database here
     toast.success(`Review posted as ${user?.displayName?.split(' ')[0]}!`);
     setReviewText('');
   };
@@ -116,15 +112,17 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
 
   return (
     <Suspense fallback={<ProductLoader />}>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 md:p-8">
+      {/* ✅ MOBILE FIX: Removed extra padding and added box-sizing logic to prevent right-side overflow */}
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-8">
         <div onClick={() => router.back()} className="absolute inset-0 bg-black/90 backdrop-blur-md cursor-pointer" />
 
-        <div className="relative bg-[#111111] rounded-lg w-full max-w-5xl max-h-[92vh] overflow-y-auto border border-white/10 shadow-2xl no-scrollbar z-10">
+        <div className="pt-8 relative bg-[#111111] md:rounded-lg w-full max-w-5xl h-full md:max-h-[92vh] overflow-y-auto border-x md:border border-white/10 shadow-2xl no-scrollbar z-10">
           
-          <button onClick={() => router.back()} className="sticky top-4 float-right mr-4 z-50 p-1.5 bg-white/10 rounded-full hover:bg-white/20 text-white border border-white/5">
+          <button onClick={() => router.back()} className="absolute top-3 -right-1 md:sticky md:top-4 md:float-right mr-4 z-50 p-1.5 bg-white/10 rounded-full hover:bg-white/20 text-white border border-white/5">
             <MdClose size={20} />
           </button>
 
+          {/* PRODUCT IMAGE & INFOS */}
           <div className="flex flex-col md:flex-row">
             
             <div className="w-full md:w-5/12 p-4 md:p-8 flex flex-col items-center border-b md:border-b-0 md:border-r border-white/5 bg-black/20">
@@ -147,6 +145,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
 
             <div className="w-full md:w-7/12 p-6 md:p-8 flex flex-col text-white">
               <div className="mb-6">
+                {/* HEADER OF PRODUCT INFOS */}
                 <span className="text-blue-400 font-bold text-[9px] tracking-[0.3em] uppercase mb-1 block italic">{product.model}</span>
                 <h1 className="text-2xl md:text-3xl font-black mb-3 tracking-tighter uppercase leading-tight text-white">{product.name}</h1>
                 
@@ -163,13 +162,27 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-6">
+                {/* BODY OF PRODUCT INFOS */}
                 <div className="bg-white/10 p-3 rounded-lg border border-white/10">
                   <p className="text-[8px] text-white/60 font-black uppercase tracking-widest mb-0.5">Ram</p>
                   <p className="text-xs font-bold text-white">{product.ram || 'N/A'}</p>
                 </div>
+                
+                {/* ✅ STORAGE FIX: Grid-2 on Mobile, Flex on Desktop */}
                 <div className="bg-white/10 p-3 rounded-lg border border-white/10">
-                  <p className="text-[8px] text-white/60 font-black uppercase tracking-widest mb-0.5">Storage</p>
-                  <p className="text-xs font-bold text-white">{product.storage?.[0] || 'Standard'}</p>
+                  <p className="text-[8px] text-white/60 font-black uppercase tracking-widest mb-2">Storage</p>
+                  <div className="grid grid-cols-2 md:flex md:flex-wrap gap-1.5">
+                    {product.storage?.map((s) => (
+                      <button 
+                        key={s} 
+                        onClick={() => setSelectedStorage(s)}
+                        className={`px-2 py-1.5 md:py-0.5 rounded text-[10px] font-bold border transition-all text-center ${selectedStorage === s ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white/5 border-white/20 text-white/60'}`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                    {!product.storage && <p className="text-xs font-bold text-white">Standard</p>}
+                  </div>
                 </div>
               </div>
 
@@ -187,7 +200,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                         value={reviewText}
                         onChange={(e) => setReviewText(e.target.value)}
                         placeholder={`Comment as ${user.displayName?.split(' ')[0]}...`} 
-                        className="bg-white/5 border border-white/10 rounded-lg flex-1 px-3 py-1.5 text-[10px] text-white outline-none focus:border-blue-500"
+                        className="bg-white/5 border border-white/10 rounded-lg flex-1 px-3 py-2 text-[10px] text-white outline-none focus:border-blue-500"
                       />
                       <button 
                         onClick={handleSubmitReview}
@@ -227,18 +240,43 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                 </div>
               </div>
 
+              {/* ADD TO CART */}
               <button onClick={handleAddToCart} className="w-full bg-white text-black py-4 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] hover:bg-blue-600 hover:text-white transition-all shadow-lg flex items-center justify-center gap-2">
                 <MdShoppingCart size={18} /> Add to Selection
               </button>
+
+              {/* GSM Arena External Link */}
+              <div className="mt-3">
+                <a 
+                  href={`https://www.gsmarena.com/res.php3?sSearch=${encodeURIComponent(product.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center justify-between p-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:border-blue-500/50 transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded bg-[#eff3f6] flex items-center justify-center overflow-hidden">
+                      {/* Simple GSMArena-style icon representation */}
+                      <span className="text-[10px] font-black text-red-500">GSM</span>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-white group-hover:text-blue-400 transition-colors">Full Technical Specifications</p>
+                      <p className="text-[8px] text-white/40 uppercase tracking-widest font-black">View on GSMArena.com</p>
+                    </div>
+                  </div>
+                  <div className="text-white/20 group-hover:text-blue-500 transition-colors">
+                    <MdChevronRight size={20} />
+                  </div>
+                </a>
+              </div>
             </div>
           </div>
 
-          {/* Suggested Section */}
+          {/* YOU MAY ALSO LIKE SECTION */}
           <div className="p-6 md:p-8 bg-black/40 border-t border-white/10">
             <h2 className="text-lg font-black mb-6 italic uppercase tracking-tighter text-white">Suggested</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {relatedProducts.map(item => (
-                <button key={item.id} onClick={() => { router.push(`/product/${item.id}`); setSelectedThumb(item.thumbnails[0]); setReviewText(''); }} className="group bg-white/5 p-3 rounded-lg border border-white/10 hover:border-blue-500/50 transition-all text-left">
+                <button key={item.id} onClick={() => { router.push(`/product/${item.id}`); setSelectedThumb(item.thumbnails[0]); setSelectedStorage(item.storage?.[0] || ''); setReviewText(''); }} className="group bg-white/5 p-3 rounded-lg border border-white/10 hover:border-blue-500/50 transition-all text-left">
                   <div className="relative aspect-square mb-2 flex items-center justify-center overflow-hidden">
                     <Image src={item.thumbnails[0].imageUrl} fill className="object-contain group-hover:scale-105 transition-transform p-1.5" alt={item.name} />
                   </div>
@@ -250,7 +288,6 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
 
-        {/* Full Image Preview */}
         {isPreviewOpen && (
           <div className="fixed inset-0 z-[150] bg-black/95 flex items-center justify-center">
             <button onClick={() => setIsPreviewOpen(false)} className="absolute top-6 right-6 text-white p-2 hover:bg-white/10 rounded-full z-[160]"><MdClose size={32} /></button>

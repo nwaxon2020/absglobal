@@ -48,7 +48,6 @@ export const products: Product[] = [
     category: "phone",
     rating: 4.8,
     likes: 124,
-    ram: "8GB",
     storage: ["256GB", "512GB", "1TB"],
     description: "The first iPhone with an aerospace‑grade titanium design. A17 Pro chip.",
     thumbnails: [

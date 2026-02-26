@@ -1,10 +1,21 @@
-'use client';
+"use client";
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { products, Product } from '@/types';
+
+// ✅ Utility to determine if text should be black or white based on background color
+const getContrastColor = (hexColor: string) => {
+  if (!hexColor) return '#ffffff';
+  const color = hexColor.replace('#', '');
+  const r = parseInt(color.substring(0, 2), 16);
+  const g = parseInt(color.substring(2, 4), 16);
+  const b = parseInt(color.substring(4, 6), 16);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness > 128 ? '#1A1A1A' : '#ffffff'; 
+};
 
 const HeroSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -14,22 +25,22 @@ const HeroSection = () => {
   const autoPlayTimer = useRef<NodeJS.Timeout | null>(null);
   const idleTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Filter products to only show those with isHero: true
   const heroProducts = products.filter(product => product.isHero === true);
-  
   const currentPhone = heroProducts[currentIndex];
   const activeColorIndex = selectedColors[currentPhone?.id] || 0;
   
-  // Logic updated: using thumbnails for variants
   const hasMultipleVariants = currentPhone?.thumbnails && currentPhone.thumbnails.length > 0;
   const activeVariant = hasMultipleVariants ? currentPhone.thumbnails![activeColorIndex] : null;
 
-  // Logic updated: pulling image and color code from the thumbnails object
   const displayImage = activeVariant ? activeVariant.imageUrl : currentPhone?.thumbnails[0].imageUrl;
   const rawColor = activeVariant ? activeVariant.colorCode : '#3b82f6';
 
   const isWhite = rawColor.toLowerCase() === '#ffffff' || rawColor.toLowerCase() === '#fff';
   const themeColor = isWhite ? '#8B5CF6' : rawColor;
+
+  // ✅ Contrast Logic
+  const contrastText = getContrastColor(themeColor);
+  const primaryTextVisibility = contrastText === '#1A1A1A' ? '#1A1A1A' : themeColor;
 
   const resetIdleTimer = () => {
     setIsAutoPlaying(false);
@@ -54,13 +65,10 @@ const HeroSection = () => {
     return () => stopAutoPlay();
   }, [isAutoPlaying, heroProducts.length]);
 
-  // Don't render if there are no hero products
-  if (heroProducts.length === 0) {
-    return null;
-  }
+  if (heroProducts.length === 0) return null;
 
   return (
-    <section className="mx-auto md:px-[12rem] md:pt-10 relative w-full min-h-screen overflow-hidden bg-[#F8F9FA] text-[#1A1A1A] flex flex-col justify-center items-center transition-colors duration-1000">
+    <section className="mx-auto md:px-[10rem] md:pt-8 relative w-full min-h-screen overflow-hidden bg-[#F8F9FA] text-[#1A1A1A] flex flex-col justify-center items-center transition-colors duration-1000">
       
       {/* BACKGROUND LAYER */}
       <div className="absolute inset-0 z-0">
@@ -99,7 +107,7 @@ const HeroSection = () => {
               >
                 <div className="flex items-center justify-center md:justify-start space-x-3 mb-4">
                   <span className="h-[2px] w-8 transition-colors duration-500" style={{ backgroundColor: themeColor }} />
-                  <span className="text-[11px] uppercase tracking-[0.4em] font-bold transition-colors duration-500" style={{ color: themeColor }}>
+                  <span className="text-[11px] uppercase tracking-[0.4em] font-bold transition-colors duration-500" style={{ color: primaryTextVisibility }}>
                     {activeVariant ? activeVariant.colorName : 'A.B.S.T Global Concept'}
                   </span>
                 </div>
@@ -109,21 +117,37 @@ const HeroSection = () => {
                     <span 
                       key={i} 
                       className={`${i === 0 ? "text-[#1A1A1A]" : "text-[#1A1A1A]/30 font-light"} inline-block mr-2`}
+                      style={i === 0 ? { color: primaryTextVisibility } : {}}
                     >
                       {word}
                     </span>
                   ))}
                 </h1>
 
+                {/* ✅ DYNAMIC RAM & SSD PILLS */}
                 {(currentPhone.ram || currentPhone.storage) && (
                   <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-4">
                     {currentPhone.ram && (
-                      <span className="px-4 py-1.5 bg-black/5 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-black/5">
+                      <span 
+                        className="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest border transition-colors duration-500"
+                        style={{ 
+                          backgroundColor: `${themeColor}`, // 10% Opacity of theme color
+                          borderColor: `${themeColor}80`,
+                          color: contrastText 
+                        }}
+                      >
                         RAM: {currentPhone.ram}
                       </span>
                     )}
                     {currentPhone.storage && currentPhone.storage.length > 0 && (
-                      <span className="px-4 py-1.5 bg-black/5 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-black/5">
+                      <span 
+                        className="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest border transition-colors duration-500"
+                        style={{ 
+                            backgroundColor: `${themeColor}`, 
+                            borderColor: `${themeColor}80`,
+                            color: contrastText 
+                        }}
+                      >
                         SSD: {currentPhone.storage[0]}
                       </span>
                     )}
@@ -134,27 +158,39 @@ const HeroSection = () => {
                   {currentPhone.description}
                 </p>
 
-                <div className="flex flex-col gap-4 md:flex-row items-center justify-center md:justify-start md:space-x-8">
-                  <div className="text-2xl md:text-3xl font-bold transition-colors duration-500" style={{ color: themeColor }}>
+                <div className="flex flex-col gap-4 items-center justify-center md:justify-start">
+                  <div className="text-2xl md:text-3xl font-bold transition-colors duration-500" style={{ color: primaryTextVisibility }}>
                     <span className="text-sm mr-1 opacity-40">$</span>{currentPhone.price.toLocaleString()}
                   </div>
                   
-                  <Link href={`/product/${currentPhone.id}`}>
-                    <motion.button 
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="px-10 py-5 bg-[#1A1A1A] text-white text-xs font-black rounded-lg uppercase tracking-widest transition-all shadow-xl shadow-black/10"
-                    >
-                      Explore 
-                    </motion.button>
-                  </Link>
-                  
+                  <div className='flex flex-row gap-2 justify-between items-center'>
+                    <Link href={`/product/${currentPhone.id}`}>
+                      <motion.button 
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-38 px-4 py-4 text-xs font-black rounded-lg uppercase tracking-widest transition-all shadow-xl shadow-black/10"
+                        style={{ backgroundColor: themeColor, color: contrastText }}
+                      >
+                        Explore 
+                      </motion.button>
+                    </Link>
+
+                    <Link href="/store">
+                      <motion.button 
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-38 px-2 py-4 border bg-[#ffff] text-black text-xs font-black rounded-lg uppercase tracking-widest transition-all shadow-xl shadow-black/10"
+                      >
+                        Visit Our Store 
+                      </motion.button>
+                    </Link>
+                  </div>
                 </div>
               </motion.div>
             </AnimatePresence>
           </div>
 
-          {/* CENTER IMAGE - Phone-like Frame */}
+          {/* CENTER IMAGE */}
           <AnimatePresence mode="wait">
             <motion.div
               key={displayImage}
@@ -170,23 +206,21 @@ const HeroSection = () => {
                 scale: { duration: 0.6 },
                 y: { duration: 6, repeat: Infinity, ease: "easeInOut" } 
               }}
-              className="lg:col-span-7 relative flex items-center justify-center w-[18rem] md:max-w-[23rem] h-[450px] md:h-[500px]"
+              className="mx-auto lg:col-span-7 relative flex items-center justify-center w-[18rem] md:max-w-[25rem] h-[450px] md:h-[450px]"
             >
               <div className="relative w-full h-full" >
                 <div 
                   className="relative w-full h-full bg-white/40 backdrop-blur-md rounded-2xl border-4 border-white/80 shadow-2xl overflow-hidden flex items-center justify-center"
                   style={{ borderColor: `${themeColor}20` }}
                 >
-
-                      <Image 
-                        src={displayImage} 
-                        alt={currentPhone.name} 
-                        fill 
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="object-cover drop-shadow-[0_25px_50px_rgba(0,0,0,0.2)]" 
-                        priority 
-                      />
-                    
+                  <Image 
+                    src={displayImage} 
+                    alt={currentPhone.name} 
+                    fill 
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover drop-shadow-[0_25px_50px_rgba(0,0,0,0.2)]" 
+                    priority 
+                  />
                 </div>
               </div>
             </motion.div>
