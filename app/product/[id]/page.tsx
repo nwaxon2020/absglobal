@@ -143,7 +143,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
               </div>
             </div>
 
-            <div className="w-full md:w-7/12 p-6 md:p-8 flex flex-col text-white">
+            <div className="w-full md:w-7/12 px-4 py-6 md:p-8 flex flex-col text-white">
               <div className="mb-6">
                 {/* HEADER OF PRODUCT INFOS */}
                 <span className="text-blue-400 font-bold text-[9px] tracking-[0.3em] uppercase mb-1 block italic">{product.model}</span>
@@ -162,7 +162,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-6">
-                {/* BODY OF PRODUCT INFOS */}
+                {/* RAM & ROM */}
                 <div className="bg-white/10 p-3 rounded-lg border border-white/10">
                   <p className="text-[8px] text-white/60 font-black uppercase tracking-widest mb-0.5">Ram</p>
                   <p className="text-xs font-bold text-white">{product.ram || 'N/A'}</p>
@@ -200,11 +200,11 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                         value={reviewText}
                         onChange={(e) => setReviewText(e.target.value)}
                         placeholder={`Comment as ${user.displayName?.split(' ')[0]}...`} 
-                        className="bg-white/5 border border-white/10 rounded-lg flex-1 px-3 py-2 text-[10px] text-white outline-none focus:border-blue-500"
+                        className="w-fullbg-white/5 border border-white/10 rounded-md md:rounded-lg flex-1 px-3 py-2 text-[10px] text-white outline-none focus:border-blue-500"
                       />
                       <button 
                         onClick={handleSubmitReview}
-                        className="bg-blue-600 p-1.5 rounded-lg text-white hover:bg-blue-700 transition disabled:opacity-50"
+                        className="w-10 bg-blue-600 p-y flex justify-center items-center rounded-md md:rounded-lg text-white hover:bg-blue-700 transition disabled:opacity-50"
                         disabled={!reviewText.trim()}
                       >
                         <MdSend size={14} />
@@ -213,14 +213,15 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                   ) : (
                     <button 
                       onClick={handleSignIn} 
-                      className="bg-white/10 border border-white/10 text-white px-3 py-1.5 rounded-lg text-[9px] font-bold hover:bg-white/20 transition"
+                      className="bg-white/10 border border-white/10 text-white px-3 py-2 rounded-md md:rounded-lg text-[9px] font-bold hover:bg-white/20 transition"
                     >
                       Sign in to comment
                     </button>
                   )}
                 </div>
-
-                <div className="relative min-h-[120px] bg-white/5 rounded-lg p-4 border border-white/10 max-h-[220px] overflow-y-auto no-scrollbar">
+                
+                {/* LIST OF PRODUCT REVIEWS */}
+                <div className="relative min-h-[120px] bg-white/5 rounded-lg p-3 md:p-4 border border-white/10 max-h-[220px] overflow-y-auto no-scrollbar">
                   <div className="space-y-3">
                     {product.reviews.map(r => (
                       <div key={r.id} className="border-b border-white/10 pb-2 last:border-0">
@@ -248,7 +249,8 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
               {/* GSM Arena External Link */}
               <div className="mt-3">
                 <a 
-                  href={`https://www.gsmarena.com/res.php3?sSearch=${encodeURIComponent(product.name)}`}
+                  // ✅ Updated URL structure to prevent Bad Request errors
+                  href={`https://www.gsmarena.com/res.php3?sSearch=${encodeURIComponent(product.name.trim())}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-center justify-between p-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:border-blue-500/50 transition-all"
@@ -287,7 +289,8 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
         </div>
-
+        
+        {/* Full Product Image */}
         {isPreviewOpen && (
           <div className="fixed inset-0 z-[150] bg-black/95 flex items-center justify-center">
             <button onClick={() => setIsPreviewOpen(false)} className="absolute top-6 right-6 text-white p-2 hover:bg-white/10 rounded-full z-[160]"><MdClose size={32} /></button>
