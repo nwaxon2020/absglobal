@@ -331,7 +331,7 @@ const StorePageUi = () => {
         </AnimatePresence>
       </div>
 
-      <div className="max-w-7xl mx-auto md:px-4 py-12">
+      <div>
           <InstallmentSection />
       </div>
     </div>

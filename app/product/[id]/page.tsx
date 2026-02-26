@@ -118,7 +118,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
 
         <div className="pt-8 relative bg-[#111111] md:rounded-lg w-full max-w-5xl h-full md:max-h-[92vh] overflow-y-auto border-x md:border border-white/10 shadow-2xl no-scrollbar z-10">
           
-          <button onClick={() => router.back()} className="absolute top-3 -right-1 md:sticky md:top-4 md:float-right mr-4 z-50 p-1.5 bg-white/10 rounded-full hover:bg-white/20 text-white border border-white/5">
+          <button onClick={() => router.back()} className="font-bold fixed top-3 -right-1 md:sticky md:top-4 md:float-right mr-4 z-50 p-3 bg-black/30 md: bg-white/10 rounded-full hover:bg-white/20 text-white border border-white/5">
             <MdClose size={20} />
           </button>
 

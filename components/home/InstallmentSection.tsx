@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, } from 'framer-motion';
 import { FiCreditCard, FiClock, FiCheckCircle, FiPercent, FiInfo, FiChevronRight } from 'react-icons/fi';
 import FinancingModal from './FinancingModal'; 
 
@@ -37,7 +37,7 @@ const InstallmentSection = () => {
 
   return (
     <section id='finance' className="py-10 md:py-20 bg-[#F8F9FA]">
-      <div className="max-w-7xl mx-aut md:px-6">
+      <div className="max-w-7xl mx-auto md:px-6">
         
         {/* Proper Explanation Card Above */}
         <motion.div 
