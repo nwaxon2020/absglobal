@@ -250,7 +250,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
               <div className="mt-3">
                 <a 
                   // ✅ Updated URL structure to prevent Bad Request errors
-                  href={`https://www.gsmarena.com/res.php3?sSearch=${encodeURIComponent(product.name.trim())}`}
+                  href={`https://www.google.com/search?q=site:gsmarena.com+${encodeURIComponent(product.name)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-center justify-between p-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:border-blue-500/50 transition-all"
