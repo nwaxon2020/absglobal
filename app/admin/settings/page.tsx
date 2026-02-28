@@ -1,9 +1,5 @@
-import FinanceEditor from "@/components/admin/settings/InstallmentalSetting";
+import AdminSettingsUi from "@/ui/admin/AdminSettingsUi";
 
-export default function AdminSettingsUi() {
-    return (
-        <>
-            <FinanceEditor/>
-        </>
-    )
+export default function AdminSettings() {
+    return <AdminSettingsUi/>
 }

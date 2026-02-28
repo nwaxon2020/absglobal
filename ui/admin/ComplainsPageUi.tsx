@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Link from "next/link";
 import { db, auth } from '@/lib/firebase';
 import { 
   collection, 
@@ -218,12 +219,12 @@ const AdminComplaintsUi = () => {
               </span>
             </div>
 
-              <a href='/admin' className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100 flex items-center gap-2">
+              <Link href='/admin' className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100 flex items-center gap-2">
                 <FiUser size={18} className="text-[#0B2A4A]" />
                 <span  className="text-[9px] font-black text-[#0B2A4A] uppercase">
                   Dashboard
                 </span>
-              </a>
+              </Link>
           </div>
         </div>
 

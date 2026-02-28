@@ -1,13 +1,23 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode } from 'react';
-import { CartItem } from '@/types';
+
+// CartItem with string ID only (for Firebase)
+export interface CartItem {
+  id: string; // Only string IDs from Firebase
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+  colorName?: string;
+  colorCode?: string;
+}
 
 interface CartContextType {
   cart: CartItem[];
   addToCart: (product: CartItem) => void;
-  removeFromCart: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
+  removeFromCart: (id: string) => void; // Only string
+  updateQuantity: (id: string, quantity: number) => void; // Only string
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -29,18 +39,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const removeFromCart = (productId: number) => {
-    setCart(currentCart => currentCart.filter(item => item.id !== productId));
+  const removeFromCart = (id: string) => {
+    setCart(currentCart => currentCart.filter(item => item.id !== id));
   };
 
-  const updateQuantity = (productId: number, quantity: number) => {
+  const updateQuantity = (id: string, quantity: number) => {
     if (quantity === 0) {
-      removeFromCart(productId);
+      removeFromCart(id);
       return;
     }
     setCart(currentCart =>
       currentCart.map(item =>
-        item.id === productId ? { ...item, quantity } : item
+        item.id === id ? { ...item, quantity } : item
       )
     );
   };

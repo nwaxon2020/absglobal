@@ -1,11 +1,14 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**', // This allows images from all secure news sources
+        hostname: '**', // Matches all secure sites
+      },
+      {
+        protocol: 'http',
+        hostname: '**', // Matches all non-secure sites (like that Leica link)
       },
     ],
   },

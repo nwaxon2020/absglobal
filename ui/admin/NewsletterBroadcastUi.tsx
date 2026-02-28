@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Link from "next/link";
 import { db, auth } from '@/lib/firebase';
 import { 
   collection, getDocs, addDoc, serverTimestamp, 
@@ -167,10 +168,10 @@ const NewsletterBroadcastUi = () => {
                 <FiChevronDown className={`transition-transform duration-300 ${showHistory ? 'rotate-180' : ''}`} />
             </button>
             
-            <a href='/admin' className="bg-white px-4 py-2.5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-2 hover:bg-gray-50 transition-all">
+            <Link href='/admin' className="bg-white px-4 py-2.5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-2 hover:bg-gray-50 transition-all">
               <FiUser size={18} className="text-[#0B2A4A]" />
               <span className="text-[9px] font-black text-[#0B2A4A] uppercase tracking-widest">Dashboard</span>
-            </a>
+            </Link>
         </div>
 
         {/* BROADCAST HISTORY CARDS */}

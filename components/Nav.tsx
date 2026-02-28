@@ -6,22 +6,23 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiHome, FiShoppingCart, FiMenu, FiX, FiChevronDown, 
-  FiLogOut, FiMail, FiSettings, FiShoppingBag, FiInfo, FiPhoneCall 
+  FiLogOut, FiSettings, FiShoppingBag, FiInfo, FiPhoneCall 
 } from 'react-icons/fi';
 import { useCart } from '@/components/CartContext';
-import { auth, googleProvider } from '@/lib/firebase'; 
+import { auth, googleProvider, db } from '@/lib/firebase'; 
 import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { doc, getDoc, collection, onSnapshot } from 'firebase/firestore';
 import Cart from './Cart';
 import Image from 'next/image';
-import { products } from '@/types/index';
 
 const Nav = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [settings, setSettings] = useState<any>(null);
+  const [dynamicBrands, setDynamicBrands] = useState<string[]>([]);
   
-  // Mobile Dropdown States
   const [mobileStoreOpen, setMobileStoreOpen] = useState(false);
   const [mobileAboutOpen, setMobileAboutOpen] = useState(false);
 
@@ -29,24 +30,40 @@ const Nav = () => {
   const { cart } = useCart();
   const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  // LOGIC: Get unique Brands (e.g., iPhone, Samsung, Sony)
-  const dynamicBrands = Array.from(new Set(products.map(p => p.name.split(' ')[0])));
-
-  // LOGIC: Admin Key check
   const isAdmin = user?.uid === process.env.NEXT_PUBLIC_ADMIN_KEY;
 
-  // Auth Listener
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
-    return () => unsubscribe();
+    // 1. Fetch Global Settings
+    const fetchBranding = async () => {
+      try {
+        const docRef = doc(db, "siteContent", "globalSettings");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setSettings(docSnap.data());
+        }
+      } catch (error) { console.error(error); }
+    };
+    fetchBranding();
+
+    // 2. GET BRANDS FROM FIREBASE (REPLACES STATIC ARRAY)
+    const unsubProducts = onSnapshot(collection(db, "products"), (snapshot) => {
+      const brands = snapshot.docs.map(doc => doc.data().model);
+      const uniqueBrands = Array.from(new Set(brands.filter(b => b && b.trim() !== "")));
+      setDynamicBrands(uniqueBrands as string[]);
+    });
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
+    return () => {
+      unsubProducts();
+      unsubscribeAuth();
+    };
   }, []);
 
   const handleSignIn = async () => {
     try { 
       await signInWithPopup(auth, googleProvider); 
       setIsOpen(false);
-    } 
-    catch (error) { console.error("Login failed", error); }
+    } catch (error) { console.error("Login failed", error); }
   };
 
   const handleSignOut = async () => {
@@ -72,24 +89,30 @@ const Nav = () => {
         <div className="max-w-7xl mx-auto px-3 sm:px-6 md:px-8">
           <div className="flex justify-between items-center h-20">
             
-            {/* Logo Section */}
+            {/* Dynamic Logo Section */}
             <Link href="/" className="flex items-center space-x-3 group">
                 <div className="relative h-12 w-12 flex-shrink-0">
                     <Image 
-                      src="/logo2.png" 
-                      alt="ABST Icon" 
+                      src={settings?.logoUrl || "/logo2.png"} 
+                      alt="Brand Logo" 
                       fill 
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      sizes="(max-width: 768px) 100vw, 33vw"
                       className="object-contain rounded-md transition-transform duration-300 group-hover:scale-105"
                     />
                 </div>
 
                 <div className="flex flex-col justify-center leading-none tracking-tight">
                     <div className="flex items-baseline space-x-1">
-                      <span className="text-sm font-black text-white uppercase italic">ABST.</span>
-                      <span className="text-xs font-bold text-blue-400">Global Concept</span>
+                      <span className="text-sm font-black text-white uppercase italic">
+                        {settings?.siteName?.split('.')[0] || "ABST"}.
+                      </span>
+                      <span className="text-xs font-bold text-blue-400">
+                        {settings?.siteName?.split('.').slice(1).join('.') || "Global Concept"}
+                      </span>
                     </div>
-                    <span className="text-[9px] font-medium text-white/60 uppercase tracking-[0.3em] mt-0.5">MobileStore</span>
+                    <span className="text-[9px] font-medium text-white/60 uppercase tracking-[0.3em] mt-0.5">
+                        {settings?.siteSubtitle || "MobileStore"}
+                    </span>
                 </div>
             </Link>
 
@@ -111,18 +134,21 @@ const Nav = () => {
                     <motion.div initial="hidden" animate="visible" exit="hidden" variants={dropdownVariants} className="absolute top-full left-0 pt-4 z-50">
                       <div className="bg-[#1A3B5C] border border-blue-500/30 rounded-lg shadow-2xl p-2 w-56 text-white text-xs uppercase">
                         <Link href="/store" className="block px-4 py-3 hover:text-yellow-400 hover:bg-white/5 rounded transition-all">All Products</Link>
+                        
                         <div className="relative group/sub">
                           <div className="flex justify-between items-center px-4 py-3 cursor-default hover:text-yellow-400">
                             Brands <FiChevronDown className="-rotate-90" />
                           </div>
+                          {/* DYNAMIC HEIGHT & OVERFLOW ADDED HERE */}
                           <div className="absolute left-full top-0 pl-2 hidden group-hover/sub:block">
-                            <div className="bg-[#1A3B5C] border border-blue-500/30 rounded-lg p-2 w-40">
+                            <div className="bg-[#1A3B5C] border border-blue-500/30 rounded-lg p-2 w-40 max-h-64 overflow-y-auto no-scrollbar shadow-xl">
                               {dynamicBrands.map((brand) => (
                                 <Link key={brand} href={`/store?search=${brand}`} className="block px-4 py-2 hover:text-yellow-400 transition-all">{brand}</Link>
                               ))}
                             </div>
                           </div>
                         </div>
+
                         <Link href="/store?filter=latest" className="block px-4 py-3 font-bold text-blue-400 hover:text-yellow-400 rounded transition-all">Latest Arrivals</Link>
                       </div>
                     </motion.div>
@@ -173,19 +199,19 @@ const Nav = () => {
                         {isAdmin ? 'CEO' : user.displayName?.split(' ')[0]}
                       </span>
                       <div className={`w-12 h-12 rounded-full border-2 overflow-hidden relative ${isAdmin ? 'border-[#FFD700]' : 'border-blue-400'}`}>
-                        <Image src={user.photoURL || '/default-avatar.png'} alt="user" fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
+                        <Image src={user.photoURL || '/default-avatar.png'} alt="user" fill sizes="48px" className="object-cover" />
                       </div>
                     </div>
                     <AnimatePresence>
                       {activeDropdown === 'user' && (
                         <motion.div initial="hidden" animate="visible" exit="hidden" variants={dropdownVariants} className="absolute top-full right-0 pt-4 z-50">
-                          <div className="bg-white rounded-lg shadow-xl w-40 overflow-hidden">
+                          <div className="bg-white rounded-lg shadow-xl w-40 overflow-hidden text-[#0B2A4A]">
                             {isAdmin && (
                               <Link href="/admin" className="w-full flex items-center space-x-2 px-4 py-3 text-blue-600 hover:bg-blue-50 text-xs font-bold transition-colors border-b border-gray-100">
                                 <FiSettings /> <span>Admin Panel</span>
                               </Link>
                             )}
-                            <button onClick={handleSignOut} className="w-full flex items-center space-x-2 px-4 py-3 text-gray-700 hover:bg-gray-100 text-xs font-bold transition-colors">
+                            <button onClick={handleSignOut} className="w-full flex items-center space-x-2 px-4 py-3 hover:bg-gray-100 text-xs font-bold transition-colors">
                               <FiLogOut /> <span>Sign Out</span>
                             </button>
                           </div>
@@ -200,7 +226,7 @@ const Nav = () => {
                 )}
               </div>
 
-              <button onClick={() => setIsOpen(!isOpen)} className="md:hidden p-2 text-white transition-transform active:scale-90">
+              <button onClick={() => setIsOpen(!isOpen)} className="md:hidden p-2 text-white">
                 {isOpen ? <FiX size={28} /> : <FiMenu size={28} />}
               </button>
             </div>
@@ -215,8 +241,10 @@ const Nav = () => {
               <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="fixed top-0 right-0 h-full w-[80%] bg-[#0B2A4A] shadow-2xl md:hidden z-[70] flex flex-col border-l border-blue-500/30 overflow-y-auto">
                 
                 <div className="p-8 pb-4 flex justify-between items-center border-b border-white/5">
-                  <span className="text-white font-black tracking-[0.3em] text-xs">A.B.S.T GLOBAL</span>
-                  <button onClick={() => setIsOpen(false)} className="text-white/60 hover:text-white transition-colors">
+                  <span className="text-white font-black tracking-[0.3em] text-xs uppercase">
+                    {settings?.siteName || "A.B.S.T GLOBAL"}
+                  </span>
+                  <button onClick={() => setIsOpen(false)} className="text-white/60">
                     <FiX size={24} />
                   </button>
                 </div>
@@ -236,7 +264,7 @@ const Nav = () => {
                       </button>
                       <AnimatePresence>
                         {mobileStoreOpen && (
-                          <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden bg-black/20 rounded-lg ml-2">
+                          <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden bg-black/20 rounded-lg ml-2 max-h-60 overflow-y-auto no-scrollbar">
                              <Link href="/store" className="block p-3 text-white/70 text-xs font-bold uppercase" onClick={() => setIsOpen(false)}>All Products</Link>
                              {dynamicBrands.map(brand => (
                                <Link key={brand} href={`/store?search=${brand}`} className="block p-3 text-white/70 text-xs font-bold uppercase" onClick={() => setIsOpen(false)}>{brand}</Link>
@@ -271,35 +299,25 @@ const Nav = () => {
                     </Link>
                 </div>
 
+                {/* Mobile Auth Bottom Bar */}
                 <div className="p-8 bg-black/20 border-t border-white/5 mt-auto">
                   {user ? (
                     <div className="flex flex-col space-y-4">
                       <div className="flex items-center space-x-4">
-                        <div className={`w-12 h-12 rounded-full border-2 overflow-hidden relative flex-shrink-0 ${isAdmin ? 'border-[#FFD700]' : 'border-yellow-400'}`}>
-                          <Image src={user.photoURL || '/default-avatar.png'} alt="user" fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
+                        <div className={`w-12 h-12 rounded-full border-2 overflow-hidden relative flex-shrink-0 border-blue-400`}>
+                          <Image src={user.photoURL || '/default-avatar.png'} alt="user" fill className="object-cover" />
                         </div>
-                        <div className="overflow-hidden">
-                          <p className={`font-bold text-sm truncate ${isAdmin ? 'text-[#FFD700]' : 'text-white'}`}>
-                            {isAdmin ? 'CEO' : user.displayName}
-                          </p>
-                          <p className="text-white/40 text-[11px] truncate flex items-center gap-1">
-                            <FiMail size={10} /> {user.email}
-                          </p>
+                        <div>
+                          <p className="font-bold text-sm text-white">{user.displayName}</p>
+                          <p className="text-white/40 text-[11px] truncate">{user.email}</p>
                         </div>
                       </div>
-
-                      {isAdmin && (
-                        <Link href="/admin" onClick={() => setIsOpen(false)} className="w-full flex items-center justify-center space-x-2 py-4 bg-blue-600 text-white rounded-lg text-xs font-black uppercase tracking-widest">
-                          <FiSettings /> <span>Admin Dashboard</span>
-                        </Link>
-                      )}
-
-                      <button onClick={handleSignOut} className="w-full flex items-center justify-center space-x-2 py-4 bg-white/5 border border-white/10 text-white rounded-lg text-xs font-black uppercase tracking-widest">
-                        <FiLogOut /> <span>Sign Out</span>
+                      <button onClick={handleSignOut} className="w-full py-4 bg-white/5 border border-white/10 text-white rounded-lg text-xs font-black uppercase">
+                        Sign Out
                       </button>
                     </div>
                   ) : (
-                    <button onClick={handleSignIn} className="w-full py-4 bg-white text-[#0B2A4A] rounded-lg text-xs font-black uppercase tracking-widest shadow-lg">
+                    <button onClick={handleSignIn} className="w-full py-4 bg-white text-[#0B2A4A] rounded-lg text-xs font-black uppercase shadow-lg">
                       Sign In With Google
                     </button>
                   )}

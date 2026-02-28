@@ -14,7 +14,7 @@ interface CartProps {
 
 const Cart = ({ isOpen, onClose }: CartProps) => {
   const { cart, removeFromCart, updateQuantity } = useCart();
-  const [deleteConfirmation, setDeleteConfirmation] = useState<{ show: boolean; itemId: number | null }>({
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{ show: boolean; itemId: string | null }>({
     show: false,
     itemId: null,
   });
@@ -88,18 +88,32 @@ const Cart = ({ isOpen, onClose }: CartProps) => {
                       className="group flex items-center space-x-4 bg-white p-3 rounded-2xl border border-black/5 hover:shadow-md transition-shadow"
                     >
                       <div className="relative w-24 h-24 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0">
-                        <Image
-                          // Logic updated: mapping item image to thumbnails[0].imageUrl
-                          src={item.thumbnails[0].imageUrl}
-                          alt={item.name}
-                          fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="object-contain p-2 group-hover:scale-110 transition-transform duration-500"
-                        />
+                        {item.image ? (
+                          <Image
+                            src={item.image}
+                            alt={item.name}
+                            fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            className="object-contain p-2 group-hover:scale-110 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                            <FiShoppingBag className="text-gray-400" size={24} />
+                          </div>
+                        )}
                       </div>
                       
                       <div className="flex-1 space-y-1">
                         <h3 className="font-bold text-sm text-[#1A1A1A] line-clamp-1">{item.name}</h3>
+                        {item.colorName && (
+                          <div className="flex items-center gap-1">
+                            <div 
+                              className="w-3 h-3 rounded-full border" 
+                              style={{ backgroundColor: item.colorCode || '#000' }}
+                            />
+                            <span className="text-[10px] text-gray-500">{item.colorName}</span>
+                          </div>
+                        )}
                         <p className="text-amber-600 font-bold text-sm">₦{item.price.toLocaleString()}</p>
                         
                         <div className="flex items-center justify-between pt-2">

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Link from "next/link";
 import { db, storage } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { collection, addDoc, serverTimestamp, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "firebase/firestore";
@@ -10,11 +11,8 @@ import {
   MdInsertLink as LinkIcon, 
   MdSave as Save, 
   MdClose as X, 
-  MdSmartphone as Smartphone, 
   MdDelete as Delete,
   MdWarning as Warning,
-  MdLayers,
-  MdCategory,
   MdEdit as Edit,
   MdCollections as Gallery,
   MdLocalOffer as Tag,
@@ -280,10 +278,10 @@ export default function AddProductPageUi() {
             <div className='w-full flex gap-3 flex-col md:flex-row w-full md:w-auto'>
 
                 <div>
-                    <a href='/admin' className="bg-white px-6 py-4 rounded-xl shadow-sm border border-gray-100 flex justify-center items-center gap-2 hover:bg-gray-50 transition-all">
+                    <Link href='/admin' className="bg-white px-6 py-4 rounded-xl shadow-sm border border-gray-100 flex justify-center items-center gap-2 hover:bg-gray-50 transition-all">
                         <FiUser size={18} className="text-[#0B2A4A]" />
                         <span className="text-[9px] font-black text-[#0B2A4A] uppercase tracking-widest">Dashboard</span>
-                    </a>
+                    </Link>
                 </div>
 
                 <div className='gap-3 flex justify-between md:justify-center items-center'>
