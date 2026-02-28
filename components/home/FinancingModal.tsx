@@ -18,9 +18,15 @@ const FinancingModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
   const [activeRequest, setActiveRequest] = useState<any>(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
-  const [formData, setFormData] = useState({ fullName: '', email: '', phone: '', address: '' });
+  // STICKY EMAIL: Check localStorage immediately so the form doesn't flicker
+  const [formData, setFormData] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedEmail = localStorage.getItem('financing_user_email');
+      return { fullName: '', email: savedEmail || '', phone: '', address: '' };
+    }
+    return { fullName: '', email: '', phone: '', address: '' };
+  });
 
-  // Cooldown Configuration (In Days)
   const REJECT_COOLDOWN_DAYS = 5;
   const CANCEL_COOLDOWN_DAYS = 3;
 
@@ -30,20 +36,17 @@ const FinancingModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
     const fetchGlobalData = async () => {
       setLoading(true);
       try {
-        // 1. Fetch Settings (Rate and Allowed Categories)
         const settingsDoc = await getDoc(doc(db, "admin_settings", "financing"));
-        let allowedCats = ["phone", "laptop"]; // Fallback defaults
+        let allowedCats = ["phone", "laptop"]; 
         
         if (settingsDoc.exists()) {
           const data = settingsDoc.data();
           setInterestRate(data.globalInterest || 5);
-          // Get categories from admin choice
           if (Array.isArray(data.allowedCategories) && data.allowedCategories.length > 0) {
             allowedCats = data.allowedCategories;
           }
         }
 
-        // 2. Query products using the dynamic "allowedCats" array
         const q = query(
           collection(db, "products"), 
           where("category", "in", allowedCats)
@@ -52,12 +55,10 @@ const FinancingModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         return onSnapshot(q, (snapshot) => {
           const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           setInventory(docs);
-          // Auto-select first product if none selected
           if (docs.length > 0) setSelectedProduct(docs[0]);
           setLoading(false);
         });
       } catch (error) {
-        console.error("Fetch error:", error);
         setLoading(false);
       }
     };
@@ -67,6 +68,10 @@ const FinancingModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
   useEffect(() => {
     if (!formData.email || formData.email.length < 5) return;
+    
+    // Remember this user for the next reload
+    localStorage.setItem('financing_user_email', formData.email);
+
     const q = query(collection(db, "financing_requests"), where("email", "==", formData.email));
     return onSnapshot(q, (snap) => {
       if (!snap.empty) setActiveRequest({ id: snap.docs[0].id, ...snap.docs[0].data() });
@@ -140,6 +145,7 @@ const FinancingModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
     const hasPaid = (activeRequest.amountPaid || 0) > 0;
     if (!hasPaid) {
       await deleteDoc(doc(db, "financing_requests", activeRequest.id));
+      localStorage.removeItem('financing_user_email'); // Clear memory so they can see form again
       toast.success("Request Deleted");
     } else {
       await updateDoc(doc(db, "financing_requests", activeRequest.id), {
@@ -191,7 +197,7 @@ const FinancingModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             </div>
           ) : (
             <>
-              <div className="bg-[#1A1A1A] text-white p-5 md:p-8 md:w-5/12 flex flex-col justify-between shrink-0">
+              <div className="bg-[#1A1A1A] text-white p-5 md:p-8 md:w-5/12 flex flex-col justify-between shrink-0 text-left">
                 <div className="overflow-y-auto">
                   <h3 className="text-xl font-bold mb-6 italic uppercase tracking-tighter">Plan Summary</h3>
                   {selectedProduct && (
@@ -220,7 +226,7 @@ const FinancingModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                 </div>
               </div>
 
-              <div className="py-5 px-3 md:p-6 md:w-7/12 overflow-y-auto">
+              <div className="py-5 px-3 md:p-6 md:w-7/12 overflow-y-auto text-left">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-black text-[#1A1A1A] uppercase italic">Financing Portal</h3>
                   <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><FiX /></button>
@@ -240,7 +246,7 @@ const FinancingModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                       <div className="w-full space-y-6">
                         <div className="bg-green-50 p-6 rounded-2xl border border-green-100 text-left">
                           <h4 className="text-[10px] font-black uppercase text-green-600 tracking-widest mb-4 italic">Live Progress</h4>
-                          <div className="flex justify-between text-[11px] font-black mb-2">
+                          <div className="flex justify-between text-[11px] font-black mb-2 uppercase">
                             <span>Paid: ₦{(activeRequest.amountPaid || 0).toLocaleString()}</span>
                             <span>Total Owed: ₦{((activeRequest.totalWithInterest - activeRequest.amountPaid) + penalty).toLocaleString()}</span>
                           </div>
@@ -249,8 +255,8 @@ const FinancingModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                           </div>
                         </div>
                         <div className="flex flex-col gap-4">
-                          <button onClick={logTestPayment} className="w-full py-4 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl">TESTER: Simulate Payment</button>
-                          <button onClick={() => setShowCancelConfirm(true)} className="text-red-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mx-auto italic"><FiAlertTriangle /> Cancel Purchase Hub</button>
+                          <button onClick={logTestPayment} className="w-full py-4 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl">Simulate Payment</button>
+                          <button onClick={() => setShowCancelConfirm(true)} className="text-red-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mx-auto italic underline">Cancel Purchase</button>
                         </div>
                       </div>
                     )}
@@ -258,7 +264,7 @@ const FinancingModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                     {activeRequest.status === 'rejected' && (
                       <div className="flex flex-col items-center p-6">
                         <FiAlertCircle className="text-red-500 mb-4" size={60} />
-                        <h2 className="text-2xl font-black uppercase text-red-600 italic tracking-tighter">Application Rejected</h2>
+                        <h2 className="text-2xl font-black uppercase text-red-600 italic tracking-tighter">Rejected</h2>
                         <div className="mt-8 bg-red-50 border border-red-100 rounded-2xl p-6 w-full flex flex-col items-center">
                           <FiCalendar className="text-red-400 mb-2" size={24} />
                           <p className="text-[9px] font-black text-red-400 uppercase tracking-[0.2em] mb-1">Cooldown Active</p>
@@ -270,7 +276,7 @@ const FinancingModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                     {activeRequest.status === 'cancelled' && (
                       <div className="flex flex-col items-center p-6">
                         <FiAlertTriangle className="text-orange-500 mb-4" size={60} />
-                        <h2 className="text-2xl font-black uppercase text-slate-900 italic tracking-tighter">Request Cancelled</h2>
+                        <h2 className="text-2xl font-black uppercase text-slate-900 italic tracking-tighter text-left">Request Cancelled</h2>
                         <div className="mt-8 bg-slate-50 border border-slate-100 rounded-2xl p-6 w-full flex flex-col items-center">
                           <FiClock className="text-slate-400 mb-2" size={24} />
                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Re-apply Eligibility</p>
